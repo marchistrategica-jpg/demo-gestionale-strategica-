@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestionale · DEMO</title>
+
+  <!-- Favicon e icone app -->
+  <link rel="icon" type="image/png" href="assets/favicon-32.png" sizes="32x32">
+  <link rel="shortcut icon" href="assets/favicon.ico">
+  <link rel="apple-touch-icon" href="assets/favicon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Strategica">
+  <meta name="theme-color" content="#0f507b">
+
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/base.css">
+
+  <!-- NOTA: in questa versione DEMO NON ci sono inclusioni degli
+       SDK Firebase. Il file js/firebase-config.js è un mock che
+       persiste tutti i dati in localStorage del browser. -->
+
+  <style>
+    /* Stili specifici della shell — non del layout globale */
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 10px 5px 5px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: background .15s;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text1);
+    }
+    .user-chip:hover { background: var(--bg2); }
+    .user-avatar {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--primaryD);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    /* Badge DEMO nella topbar */
+    .demo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeeba;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .demo-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #f0ad4e;
+    }
+
+    /* Bottone reset demo */
+    .btn-reset-demo {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg1);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text1);
+      transition: all .15s;
+    }
+    .btn-reset-demo:hover {
+      background: #fff3cd;
+      border-color: #f0ad4e;
+      color: #856404;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- =========== SIDEBAR =========== -->
+  <aside class="sidebar">
+
+    <!-- Brand / Logo -->
+    <div class="sb-brand" id="sb-brand">
+      <!-- Popolato da router.js via theme.js -->
+    </div>
+
+    <!-- Navigazione principale -->
+    <nav class="sb-nav" id="sb-nav">
+      <!-- Popolato da router.js via theme.js -->
+    </nav>
+
+    <!-- Link gestionali esterni -->
+    <div class="sb-externals" id="sb-externals" style="display:none">
+      <!-- Popolato da router.js via theme.js -->
+    </div>
+
+    <!-- Footer sidebar -->
+    <div class="sb-foot">
+      <span><span class="status-dot"></span>Demo locale</span>
+      <span id="sb-version">v1.0</span>
+    </div>
+
+  </aside>
+  <!-- =========== /SIDEBAR =========== -->
+
+
+  <!-- =========== AREA PRINCIPALE =========== -->
+  <div class="main">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div id="topbar-title" class="topbar-title">Dashboard</div>
+      <div class="topbar-right">
+        <span class="demo-badge">Versione Demo</span>
+        <button type="button" class="btn-reset-demo" id="btn-reset-demo" title="Ripristina i dati demo iniziali">
+          ↺ Reset demo
+        </button>
+        <span id="topbar-date" class="topbar-date"></span>
+        <div class="user-chip" id="user-chip">
+          <div class="user-avatar" id="user-initials">—</div>
+          <span id="user-name">Utente</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Contenuto modulo (caricato dinamicamente) -->
+    <div class="content">
+      <div id="main-content">
+        <div class="loading">
+          <div class="spinner"></div>
+          Caricamento...
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <!-- =========== /AREA PRINCIPALE =========== -->
+
+</div>
+
+<!-- Container toast notifiche -->
+<div id="toast-container" class="toast-container"></div>
+
+<!-- App init -->
+<script type="module">
+  import { initRouter }     from './js/router.js'
+  import { todayFormatted } from './js/utils.js'
+  // Importare firebase-config qui garantisce che il mock (e il seed)
+  // siano caricati prima dei moduli che lo usano.
+  import { resetDemoDB }    from './js/firebase-config.js'
+
+  // Data nel topbar
+  const dateEl = document.getElementById('topbar-date')
+  if (dateEl) dateEl.textContent = todayFormatted()
+
+  // Bottone "Reset demo" — chiede conferma, poi ricarica la pagina
+  const btnReset = document.getElementById('btn-reset-demo')
+  if (btnReset) {
+    btnReset.addEventListener('click', () => {
+      const ok = confirm(
+        'Ripristinare i dati demo iniziali?\n\n' +
+        'Tutte le modifiche fatte in questa demo (contratti, incassi, ' +
+        'provvigioni, ecc.) verranno eliminate e sostituite con i dati ' +
+        'di esempio originali.\n\n' +
+        'Questa operazione non può essere annullata.'
+      )
+      if (!ok) return
+      resetDemoDB()
+      window.location.reload()
+    })
+  }
+
+  // Avvia il router
+  initRouter()
+</script>
+
+</body>
+</html>

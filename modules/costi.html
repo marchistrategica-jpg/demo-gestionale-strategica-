@@ -1,0 +1,296 @@
+<!-- ============================================================
+     COSTI.HTML — Modulo Costi & Break Even v3
+     ============================================================ -->
+
+<div class="content">
+
+  <!-- ── KPI costi fissi ──────────────────────────────────── -->
+  <div class="kpi-grid" id="kpi-costi">
+    <div class="kpi-card primary">
+      <div class="kpi-label">Costi fissi / mese</div>
+      <div class="kpi-value" id="kpi-fissi">—</div>
+      <div class="kpi-sub" id="kpi-fissi-sub">voci attive</div>
+    </div>
+    <div class="kpi-card secondary">
+      <div class="kpi-label">Totale annuale</div>
+      <div class="kpi-value" id="kpi-annuale">—</div>
+      <div class="kpi-sub">Fissi × 12</div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-label">Voci di costo</div>
+      <div class="kpi-value" id="kpi-count">—</div>
+      <div class="kpi-sub" id="kpi-count-sub">attive</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Break Even mensile</div>
+      <div class="kpi-value" id="be-soglia">—</div>
+      <div class="kpi-sub">ricavi minimi / mese</div>
+    </div>
+  </div>
+
+  <!-- ── Tabella costi fissi ──────────────────────────────── -->
+  <div class="table-wrap" style="margin-bottom:16px;">
+    <div class="table-head">
+      <span class="card-title">Costi fissi</span>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary btn-sm" onclick="window.__costiModule.registraMese()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+          </svg>
+          Registra costi del mese
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="window.__costiModule.openNew()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Aggiungi costo
+        </button>
+      </div>
+    </div>
+    <div id="table-costi-wrap">
+      <div class="loading"><div class="spinner"></div>Caricamento costi...</div>
+    </div>
+  </div>
+
+  <!-- ── SEZIONE BREAK EVEN ───────────────────────────────── -->
+  <div class="table-wrap">
+    <div class="table-head">
+      <div>
+        <span class="card-title">Analisi Break Even</span>
+        <span class="text-muted" style="display:block;font-size:11px;margin-top:2px;font-weight:500;">
+          Media ultimi 12 mesi — soglia = totale costi fissi mensili
+        </span>
+      </div>
+    </div>
+
+    <div style="padding:20px 24px;" id="be-container">
+
+      <!-- Loading -->
+      <div class="loading" id="be-loading">
+        <div class="spinner"></div>
+        Calcolo in corso...
+      </div>
+
+      <!-- Barra 1: Incassi registrati -->
+      <div class="be-card" id="be-card-1" style="display:none;">
+        <div class="be-card-title">Break-Even su Incassi Registrati</div>
+        <div class="be-scale">
+          <span>€ 0</span>
+          <span id="be-soglia-1">Break-Even: —</span>
+        </div>
+        <div class="be-track">
+          <div class="be-fill" id="be-fill-1"></div>
+        </div>
+        <div class="be-label" id="be-label-1">—</div>
+      </div>
+
+      <!-- Spazio tra le due barre -->
+      <div style="height:12px;"></div>
+
+      <!-- Barra 2: Contratti firmati -->
+      <div class="be-card" id="be-card-2" style="display:none;">
+        <div class="be-card-title">Break-Even su Incasso Reale (Contratti)</div>
+        <div class="be-scale">
+          <span>€ 0</span>
+          <span id="be-soglia-2">Break-Even: —</span>
+        </div>
+        <div class="be-track">
+          <div class="be-fill be-fill-blue" id="be-fill-2"></div>
+        </div>
+        <div class="be-label" id="be-label-2">—</div>
+      </div>
+
+      <!-- Stato vuoto -->
+      <div id="be-empty" style="display:none;">
+        <div class="empty-state">
+          <p>Aggiungi costi fissi e registra movimenti per vedere l'analisi break even.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+
+<!-- ── MODAL AGGIUNGI/MODIFICA COSTO ────────────────────────── -->
+<div class="modal-overlay" id="modal-costo">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-costo-title">Nuovo costo fisso</span>
+      <button class="modal-close" onclick="window.__costiModule.closeModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <input type="hidden" id="costo-id">
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label">Descrizione *</label>
+        <input type="text" class="form-control" id="costo-descrizione" placeholder="Es. Affitto ufficio, Abbonamento software…">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Importo (€) *</label>
+          <input type="number" class="form-control" id="costo-importo" placeholder="0.00" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Periodicità</label>
+          <select class="form-control" id="costo-periodicita">
+            <option value="mensile">Mensile</option>
+            <option value="trimestrale">Trimestrale</option>
+            <option value="semestrale">Semestrale</option>
+            <option value="annuale">Annuale</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label">Categoria *</label>
+        <input type="text" class="form-control" id="costo-categoria" placeholder="Es. Struttura, IT, Personale…" list="categorie-list">
+        <datalist id="categorie-list">
+          <option value="Struttura"><option value="Personale"><option value="IT">
+          <option value="Marketing"><option value="Consulenze"><option value="Utenze">
+          <option value="Assicurazioni"><option value="Altro">
+        </datalist>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Stato</label>
+        <div class="flex-center gap-8">
+          <input type="checkbox" id="costo-attivo" checked style="width:16px;height:16px;accent-color:var(--primary);cursor:pointer;">
+          <span style="font-size:12px;font-weight:600;color:var(--text1);">Costo attivo</span>
+        </div>
+      </div>
+
+      <div id="costo-preview" style="display:none;margin-top:12px;padding:10px 14px;background:var(--primaryD);border-radius:var(--radius-sm);border:1px solid rgba(230,22,92,0.2);">
+        <div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text2);margin-bottom:4px;">Equivalente mensile</div>
+        <div style="font-size:18px;font-weight:800;color:var(--primary);" id="costo-preview-val">—</div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="window.__costiModule.closeModal()">Annulla</button>
+      <button class="btn btn-primary" onclick="window.__costiModule.saveCosto()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Salva
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<style>
+/* Tabella */
+#table-costi-wrap .btn-icon { width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center; }
+.costo-inattivo td { opacity:.45; }
+.cat-struttura  { background:var(--secondaryD);color:var(--secondary); }
+.cat-personale  { background:var(--primaryD);color:var(--primary); }
+.cat-it         { background:rgba(16,185,129,.1);color:var(--green); }
+.cat-marketing  { background:var(--amberD);color:#b45309; }
+.cat-altro      { background:var(--bg2);color:var(--text1); }
+
+/* ── Break Even bars ─────────────────────────────────────── */
+.be-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.be-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text0);
+  margin-bottom: 16px;
+}
+.be-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
+  margin-bottom: 8px;
+}
+.be-track {
+  width: 100%;
+  height: 28px;
+  background: #e8ecf3;
+  border-radius: 14px;
+  overflow: hidden;
+}
+.be-fill {
+  height: 100%;
+  width: 0%;
+  background: #10b981;
+  border-radius: 14px;
+  transition: width 0.7s cubic-bezier(.4,0,.2,1);
+}
+.be-fill.sotto { background: #f87171; }
+.be-fill-blue  { background: #0f507b !important; }
+.be-fill-blue.sotto { background: #f87171 !important; }
+.be-label {
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text1);
+  text-align: center;
+}
+</style>
+
+<!-- Modal conferma registrazione costi mensili -->
+<div class="modal-overlay" id="modal-costi-mese">
+  <div class="modal" style="max-width:480px;width:95%;">
+    <div class="modal-header">
+      <span class="modal-title">Registra costi del mese</span>
+      <button class="modal-close" onclick="document.getElementById('modal-costi-mese').classList.remove('open')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <!-- Selettore mese -->
+      <div class="form-row" style="margin-bottom:16px;">
+        <div class="form-group">
+          <label class="form-label">Mese</label>
+          <select class="form-control" id="cm-mese">
+            <option value="1">Gennaio</option><option value="2">Febbraio</option>
+            <option value="3">Marzo</option><option value="4">Aprile</option>
+            <option value="5">Maggio</option><option value="6">Giugno</option>
+            <option value="7">Luglio</option><option value="8">Agosto</option>
+            <option value="9">Settembre</option><option value="10">Ottobre</option>
+            <option value="11">Novembre</option><option value="12">Dicembre</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Anno</label>
+          <select class="form-control" id="cm-anno"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Conto</label>
+          <select class="form-control" id="cm-conto">
+            <option value="">— Seleziona —</option>
+          </select>
+        </div>
+      </div>
+      <!-- Lista costi -->
+      <div id="cm-lista" style="max-height:260px;overflow-y:auto;margin-bottom:14px;"></div>
+      <!-- Totale -->
+      <div style="display:flex;justify-content:space-between;padding:10px 14px;
+                  background:rgba(248,113,113,0.06);border-radius:8px;border:1px solid rgba(248,113,113,0.2);">
+        <span style="font-size:12px;font-weight:700;color:var(--text1);">Totale uscite</span>
+        <span style="font-size:15px;font-weight:800;color:var(--red);" id="cm-totale">—</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="document.getElementById('modal-costi-mese').classList.remove('open')">Annulla</button>
+      <button class="btn btn-primary" id="cm-conferma">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Registra tutto
+      </button>
+    </div>
+  </div>
+</div>
